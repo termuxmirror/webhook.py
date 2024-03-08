@@ -3,11 +3,11 @@ name: Publish Package
 on:
   push:
     tags:
-      - 'v*' # Veröffentlichen Sie das Paket nur für Tags, die mit 'v' beginnen (z.B. v1.0, v2.0)
+      - 'v*'
 
 jobs:
   publish:
-    runs-on: ubuntu-latest # Verwenden Sie einen Ubuntu-Laufzeitumgebung
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -15,7 +15,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.x' # Verwenden Sie Python 3.x
+        python-version: '3.x'
 
     - name: Install dependencies
       run: |
@@ -25,8 +25,19 @@ jobs:
     - name: Build package
       run: python setup.py sdist bdist_wheel
 
-    - name: Publish to GitHub Packages
-      run: twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        TWINE_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        echo "[distutils]" >> ~/.pypirc
+        echo "index-servers = pypi" >> ~/.pypirc
+        echo "[pypi]" >> ~/.pypirc
+        echo "username = $TWINE_USERNAME" >> ~/.pypirc
+        echo "password = $TWINE_PASSWORD" >> ~/.pypirc
+        echo "token = $TWINE_TOKEN" >> ~/.pypirc
+        twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
 
     - name: Cleanup
       run: |
